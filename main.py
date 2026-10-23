@@ -92,7 +92,7 @@ def validate_args(args, parser):
 
     total_days = sum(len(split_range(day_range)) for day_range in args.days)
 
-    if (len(args.times) > total_days):
+    if len(args.times) > total_days:
         parser.error(
             f"Błąd. Podano {len(args.times)} pór dnia, "
             f"ale wybrano tylko {total_days} dni."
