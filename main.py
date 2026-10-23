@@ -2,7 +2,7 @@ import argparse as ap
 import sys
 from pathlib import Path
 
-# Nazwy miesięcy/dni tygodnia/pór dnia jak w przykładzie z treści zadania.
+# Names of allowed months, days, and times based on the task description.
 ALLOWED_MONTHS = [
     "styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec", "lipiec",
     "sierpień", "wrzesień", "październik", "listopad", "grudzień"
@@ -173,12 +173,6 @@ def main():
 
     for path in file_paths:
         print(path)
-
-    # Testowanie
-    # print(f"Miesiące: {args.months}")
-    # print(f"Dni: {args.days}")
-    # print(f"Pory: {args.times}")
-    # print(f"Tworzenie: {args.create_mode}")
 
 if __name__ == '__main__':
     main()
