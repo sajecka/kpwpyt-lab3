@@ -1,5 +1,6 @@
 import argparse as ap
 import sys
+from pathlib import Path
 
 # Nazwy miesięcy/dni tygodnia/pór dnia jak w przykładzie z treści zadania.
 ALLOWED_MONTHS = [
@@ -89,12 +90,89 @@ def validate_args(args, parser):
             f"musi być równa liczbie zakresów dni ({len(args.days)})."
         )
 
+    total_days = sum(len(split_range(day_range)) for day_range in args.days)
+
+    if len(args.times) > total_days:
+        parser.error(
+            f"Błąd. Podano {len(args.times)} pór dnia, "
+            f"ale wybrano tylko {total_days} dni."
+        )
+
+DAY_NAMES = {
+    "pn": "poniedziałek",
+    "wt": "wtorek",
+    "śr": "środa",
+    "czw": "czwartek",
+    "pt": "piątek",
+    "sb": "sobota",
+    "nd": "niedziela"
+}
+
+TIME_NAMES = {
+    "r": "rano",
+    "w": "wieczorem"
+}
+
+def split_range(lst):
+    if "-" not in lst:
+        return [lst]
+
+    start, end = lst.split("-")
+    startId = ALLOWED_DAYS.index(start)
+    endId = ALLOWED_DAYS.index(end)
+    return ALLOWED_DAYS[startId:endId + 1]
+
+def expand_day(d):
+    return DAY_NAMES[d]
+
+def expand_time(t):
+    return TIME_NAMES[t]
+
+def generate_paths(months, days, times):
+    paths = []
+    timeId = 0
+
+    for month, day_range in zip(months, days):
+        expDays = split_range(day_range)
+        for day in expDays:
+            time = times[timeId] if timeId < len(times) else "r"
+            timeId += 1
+
+            day = expand_day(day)
+            time = expand_time(time)
+
+            path = Path(month, day, time)
+            paths.append(path)
+
+    return paths
+
+# Helper function for person 3
+def generate_file_paths(paths):
+    file_paths = []
+    for path in paths:
+        file_paths.append(path / "Dane.csv")
+    return file_paths
+
+def create_directories(paths):
+    for path in paths:
+        path.mkdir(parents=True, exist_ok=True)
+
 
 def main():
     parser = build_parser()
     args = parser.parse_args()
 
     validate_args(args, parser)
+
+    paths = generate_paths(args.months, args.days, args.times)
+
+    if args.create_mode:
+        create_directories(paths)
+
+    file_paths = generate_file_paths(paths)
+
+    for path in file_paths:
+        print(path)
 
     # Testowanie
     # print(f"Miesiące: {args.months}")
