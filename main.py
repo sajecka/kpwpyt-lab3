@@ -175,15 +175,20 @@ def generate_data(paths):
             csvwriter.writerow(generated_data)
 
 def read_data(file_paths, model):
-    sum = 0
+    model_sum = 0
     for path in file_paths:
+        if not Path(path).exists():
+            print(f"File {path} does not exist!")
+            return None
+
         with open(path, 'r', encoding='utf-8') as file:
             csvreader = csv.DictReader(file)
 
             for row in csvreader:
                 if row["Model"] == model:
-                    sum += int(row["Czas"].split("s")[0]) # We take only numeric value
-    return sum
+                    model_sum += int(row["Czas"].split("s")[0]) # We take only numeric value
+
+    return model_sum
 
 def main():
     parser = build_parser()
@@ -198,7 +203,9 @@ def main():
         create_directories(paths)
         generate_data(file_paths)
 
-    print(str(read_data(file_paths, "A")) + "s")
+    response = read_data(file_paths, "A")
+    if response:
+        print(str(response) + "s")
 
 if __name__ == '__main__':
     main()
