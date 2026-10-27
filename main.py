@@ -1,6 +1,8 @@
 import argparse as ap
 import sys
 from pathlib import Path
+import csv
+import random
 
 # Names of allowed months, days, and times based on the task description.
 ALLOWED_MONTHS = [
@@ -9,6 +11,9 @@ ALLOWED_MONTHS = [
 ]
 ALLOWED_DAYS = ["pn", "wt", "śr", "czw", "pt", "sb", "nd"]
 ALLOWED_TIMES = ["r", "w"]
+
+MODELS = ["A", "B", "C"]
+DATA_RANGE = 1000
 
 def validate_day_range(day_range):
     bounds = day_range.split("-")
@@ -146,7 +151,6 @@ def generate_paths(months, days, times):
 
     return paths
 
-# Helper function for person 3
 def generate_file_paths(paths):
     file_paths = []
     for path in paths:
@@ -157,6 +161,29 @@ def create_directories(paths):
     for path in paths:
         path.mkdir(parents=True, exist_ok=True)
 
+def generate_data(paths):
+    for path in paths:
+        generated_data = [
+            MODELS[random.randint(0, len(MODELS)-1)],
+            random.randint(0, DATA_RANGE),
+            str(random.randint(0, DATA_RANGE)) + "s"
+        ]
+
+        with open(path, 'w', encoding='utf-8') as file:
+            csvwriter = csv.writer(file)
+            csvwriter.writerow(["Model", "Wynik", "Czas"])
+            csvwriter.writerow(generated_data)
+
+def read_data(file_paths, model):
+    sum = 0
+    for path in file_paths:
+        with open(path, 'r', encoding='utf-8') as file:
+            csvreader = csv.DictReader(file)
+
+            for row in csvreader:
+                if row["Model"] == model:
+                    sum += int(row["Czas"].split("s")[0]) # We take only numeric value
+    return sum
 
 def main():
     parser = build_parser()
@@ -165,14 +192,13 @@ def main():
     validate_args(args, parser)
 
     paths = generate_paths(args.months, args.days, args.times)
+    file_paths = generate_file_paths(paths)
 
     if args.create_mode:
         create_directories(paths)
+        generate_data(file_paths)
 
-    file_paths = generate_file_paths(paths)
-
-    for path in file_paths:
-        print(path)
+    print(str(read_data(file_paths, "A")) + "s")
 
 if __name__ == '__main__':
     main()
