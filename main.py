@@ -178,7 +178,7 @@ def read_data(file_paths, model):
     model_sum = 0
     for path in file_paths:
         if not Path(path).exists():
-            print(f"File {path} does not exist!")
+            print(f"Błąd. Plik {path} nie istnieje!")
             return None
 
         with open(path, 'r', encoding='utf-8') as file:
@@ -204,7 +204,7 @@ def main():
         generate_data(file_paths)
 
     response = read_data(file_paths, "A")
-    if response:
+    if response is not None:
         print(str(response) + "s")
 
 if __name__ == '__main__':
