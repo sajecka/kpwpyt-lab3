@@ -183,7 +183,7 @@ def generate_data(paths):
             csvwriter.writerow([
                 generated_data[0] + " ",
                 " " + str(generated_data[1]) + " ",
-                " " + generated_data[2],
+                " " + str(generated_data[2]),
                 ""
             ])
 
