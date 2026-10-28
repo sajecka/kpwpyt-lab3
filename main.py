@@ -1,8 +1,8 @@
 import argparse as ap
-import sys
 from pathlib import Path
 import csv
 import random
+import json
 
 # Names of allowed months, days, and times based on the task description.
 ALLOWED_MONTHS = [
@@ -41,7 +41,7 @@ def validate_day_range(day_range):
 
 def build_parser():
     parser = ap.ArgumentParser(
-        description="Skrypt do tworzenia i odczytu plików CSV w strukturze katalogów.",
+        description="Skrypt do tworzenia i odczytu plików CSV i JSON w strukturze katalogów.",
         epilog="Przykładowe użycie: python main.py -m styczeń luty -d pn-wt pt -p r w -t"
     )
 
@@ -84,6 +84,14 @@ def build_parser():
         action="store_true",
         help="Tryb tworzenia plików. "
              "Brak tej flagi oznacza domyślnie tryb odczytu."
+    )
+
+    parser.add_argument(
+        "-f", "--format",
+        dest="file_format",
+        choices=["csv", "json"],
+        default="csv",
+        help="Format plików: csv lub json. Domyślnie csv."
     )
 
     return parser
@@ -151,10 +159,10 @@ def generate_paths(months, days, times):
 
     return paths
 
-def generate_file_paths(paths):
+def generate_file_paths(paths, file_format="csv"):
     file_paths = []
     for path in paths:
-        file_paths.append(path / "Dane.csv")
+        file_paths.append(path / ("Dane." + file_format))
     return file_paths
 
 def create_directories(paths):
@@ -169,24 +177,57 @@ def generate_data(paths):
             str(random.randint(0, DATA_RANGE)) + "s"
         ]
 
+        with open(path, 'w', encoding='utf-8', newline='') as file:
+            csvwriter = csv.writer(file, delimiter=';')
+            csvwriter.writerow(["Model", " Wynik", " Czas", ""])
+            csvwriter.writerow([
+                generated_data[0] + " ",
+                " " + str(generated_data[1]) + " ",
+                " " + generated_data[2],
+                ""
+            ])
+
+def generate_json_data(paths):
+    for path in paths:
+        generated_data = {
+            "Model": MODELS[random.randint(0, len(MODELS) - 1)],
+            "Wynik": random.randint(0, DATA_RANGE),
+            "Czas": str(random.randint(0, DATA_RANGE)) + "s"
+        }
+
         with open(path, 'w', encoding='utf-8') as file:
-            csvwriter = csv.writer(file)
-            csvwriter.writerow(["Model", "Wynik", "Czas"])
-            csvwriter.writerow(generated_data)
+            json.dump(generated_data, file)
 
 def read_data(file_paths, model):
     model_sum = 0
+
     for path in file_paths:
-        if not Path(path).exists():
-            print(f"Błąd. Plik {path} nie istnieje!")
+        if not path.exists():
+            print(f"Błąd. Plik {path} nie istnieje")
+            return None
+
+        with open(path, 'r', encoding='utf-8', newline='') as file:
+            csvreader = csv.DictReader(file, delimiter=';', skipinitialspace=True)
+
+            for row in csvreader:
+                if row["Model"].strip() == model:
+                    model_sum += int(row["Czas"].strip().split("s")[0])
+
+    return model_sum
+
+def read_json_data(file_paths, model):
+    model_sum = 0
+
+    for path in file_paths:
+        if not path.exists():
+            print(f"Błąd. Plik {path} nie istnieje")
             return None
 
         with open(path, 'r', encoding='utf-8') as file:
-            csvreader = csv.DictReader(file)
+            data = json.load(file)
 
-            for row in csvreader:
-                if row["Model"] == model:
-                    model_sum += int(row["Czas"].split("s")[0]) # We take only numeric value
+            if data["Model"] == model:
+                model_sum += int(data["Czas"].split("s")[0])
 
     return model_sum
 
@@ -197,15 +238,24 @@ def main():
     validate_args(args, parser)
 
     paths = generate_paths(args.months, args.days, args.times)
-    file_paths = generate_file_paths(paths)
+    file_paths = generate_file_paths(paths, args.file_format)
 
     if args.create_mode:
         create_directories(paths)
-        generate_data(file_paths)
 
-    response = read_data(file_paths, "A")
-    if response is not None:
-        print(str(response) + "s")
+        if args.file_format == "csv":
+            generate_data(file_paths)
+        else:
+            generate_json_data(file_paths)
+
+    else:
+        if args.file_format == "csv":
+            response = read_data(file_paths, "A")
+        else:
+            response = read_json_data(file_paths, "A")
+
+        if response is not None:
+            print(str(response) + "s")
 
 if __name__ == '__main__':
     main()
