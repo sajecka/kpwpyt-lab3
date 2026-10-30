@@ -203,7 +203,7 @@ def read_data(file_paths, model):
 
     for path in file_paths:
         if not path.exists():
-            print(f"Błąd. Plik {path} nie istnieje")
+            print(f"Błąd. Plik {path} nie istnieje.")
             return None
 
         with open(path, 'r', encoding='utf-8', newline='') as file:
@@ -220,7 +220,7 @@ def read_json_data(file_paths, model):
 
     for path in file_paths:
         if not path.exists():
-            print(f"Błąd. Plik {path} nie istnieje")
+            print(f"Błąd. Plik {path} nie istnieje.")
             return None
 
         with open(path, 'r', encoding='utf-8') as file:
